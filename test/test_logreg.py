@@ -25,14 +25,18 @@ def test_updates():
 	loss = reg.loss_history_train
 	assert loss[-1] < loss[0], "Loss didn't decrease"
 
+
 	reg = logreg.LogisticRegression(
-        X_train.shape[1], max_iter=2, learning_rate=0.001, batch_size=12, tol=1e-6
+        X_train.shape[1], max_iter=100, learning_rate=0.00000000000001, batch_size=12, tol=1e-6
     )
-	losses = 0
-	for i in range(5):
-		reg.train_model(X_train, y_train, X_val, y_val)
-		losses += reg.loss_history_train[-1]
-	assert loss[-1] <= losses/5, "Loss should be lower after longer training"
+	reg.train_model(X_train, y_train, X_val, y_val)
+	learn = reg.loss_history_train[-1]
+	reg = logreg.LogisticRegression(
+        X_train.shape[1], max_iter=100, learning_rate=0.001, batch_size=12, tol=1e-6
+    )
+	reg.train_model(X_train, y_train, X_val, y_val)
+	learn2 = reg.loss_history_train[-1]
+	assert learn > learn2, "Loss should be lower with faster learning rate"
 
 
 def test_predict():
