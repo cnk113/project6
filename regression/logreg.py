@@ -126,7 +126,7 @@ class LogisticRegression(BaseRegressor):
         """
         pred = self.make_prediction(X)
         pred = np.clip(pred, 0.000001, .999999) # Clips out 0s and 1s to prevent division errors
-        return -(y.dot(np.log(pred)) + (1 - y).dot(np.log(1 - pred))).mean()
+        return -((y * np.log(pred)) + ((1-y) * (np.log(1-pred)))).mean()
 
     
     def make_prediction(self, X) -> np.array:
@@ -141,7 +141,5 @@ class LogisticRegression(BaseRegressor):
         Returns: 
             y_pred for given X
         """
-        return 1 / (1 + np.exp(-X.dot(self.W)))
-
-
-    
+        neglog = -X.dot(self.W)
+        return 1 / (1 + np.exp(neglog))

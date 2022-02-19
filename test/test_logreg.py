@@ -17,20 +17,22 @@ def test_updates():
 	# Check that your loss function is correct and that 
 	# you have reasonable losses at the end of training
 
-	X_train, X_test, y_train, y_test = utils.loadDataset(split_percent=0.8)
+	X_train, X_val, y_train, y_val = utils.loadDataset(split_percent=0.7)
 	reg = logreg.LogisticRegression(
-        X_train.shape[1], max_iter=1000, learning_rate=0.001, batch_size=32, tol=1e-6
+        X_train.shape[1], max_iter=1000, learning_rate=0.001, batch_size=12, tol=1e-6
     )
-	reg.train_model(X_train, y_train, X_test, y_test)
+	reg.train_model(X_train, y_train, X_val, y_val)
 	loss = reg.loss_history_train
 	assert loss[-1] < loss[0], "Loss didn't decrease"
 
 	reg = logreg.LogisticRegression(
-        X_train.shape[1], max_iter=10, learning_rate=0.001, batch_size=32, tol=1e-6
+        X_train.shape[1], max_iter=2, learning_rate=0.001, batch_size=12, tol=1e-6
     )
-	reg.train_model(X_train, y_train, X_test, y_test)
-	loss2 = reg.loss_history_train
-	assert loss[-1] <= loss2[-1], "Loss should be lower after longer training"
+	losses = 0
+	for i in range(5):
+		reg.train_model(X_train, y_train, X_val, y_val)
+		losses += reg.loss_history_train[-1]
+	assert loss[-1] <= losses/5, "Loss should be lower after longer training"
 
 
 def test_predict():
@@ -39,17 +41,18 @@ def test_predict():
 
 	# Check accuracy of model after training
 
-	X_train, X_test, y_train, y_test = utils.loadDataset(split_percent=0.8)
+	X_train, X_val, y_train, y_val = utils.loadDataset(split_percent=0.7)
 	reg = logreg.LogisticRegression(
-		X_train.shape[1], max_iter=1000, learning_rate=0.001, batch_size=32, tol=1e-6
+		X_train.shape[1], max_iter=1000, learning_rate=0.001, batch_size=12, tol=1e-6
     )
 	w = reg.W
-	reg.train_model(X_train, y_train, X_test, y_test)
+	reg.train_model(X_train, y_train, X_val, y_val)
 	w2 = reg.W
 	assert not np.allclose(w, w2), "Weights didn't change after training"
 
-	pred = reg.make_prediction(X_test)
+	X_val = np.hstack([X_val, np.ones((X_val.shape[0], 1))])
+	pred = reg.make_prediction(X_val)
 	pred[pred >= .5] = 1
 	pred[pred < .5] = 0
-	acc = np.sum(y_test == pred) / len(pred)
+	acc = np.sum(y_val == pred) / len(pred)
 	assert acc > .5, "Accuracy is worse than guessing"
